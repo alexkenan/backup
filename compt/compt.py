@@ -5,6 +5,9 @@ from zipfile import ZipFile
 import os
 import shutil
 import re
+import subprocess
+from datetime import datetime
+from time import sleep
 
 
 def backup_to_zip(folder, path, number=None):
@@ -25,7 +28,7 @@ def backup_to_zip(folder, path, number=None):
             zipfilename = '{}.zip'.format(os.path.basename(folder))
 
         # create the ZIP file
-        print 'Creating {}...'.format(zipfilename)
+        print('Creating {}...'.format(zipfilename))
 
         backupzip = ZipFile(zipfilename, 'w', allowZip64=True)
         amount = 0
@@ -43,15 +46,15 @@ def backup_to_zip(folder, path, number=None):
                 amount += 1
 
         backupzip.close()
-        print 'Backed up {} files!\n'.format(amount)
+        print('Backed up {} files!\n'.format(amount))
 
     else:
         if not os.path.exists(path) and not os.path.exists(folder):
-            print 'Error: Both "{}" and "{}" do not exist!\n'.format(folder, path)
+            print('Error: Both "{}" and "{}" do not exist!\n'.format(folder, path))
         elif not os.path.exists(folder):
-            print 'Error: Folder path "{}" does not exist\n'.format(folder)
+            print('Error: Folder path "{}" does not exist\n'.format(folder))
         elif not os.path.exists(path):
-            print 'Error: Target path "{}" does not exist!\n'.format(path)
+            print('Error: Target path "{}" does not exist!\n'.format(path))
 
 
 def selectnumber():
@@ -59,7 +62,7 @@ def selectnumber():
     :return: Number 1 thru 4, inclusive, based on number.txt
     """
     # figure out the file name
-    with open('/Users/Alex/Documents/Python/number.txt') as files:
+    with open('/Users/Alex/Documents/Python3/compt/number.txt') as files:
         number = int(files.read())
     to_return = number
     if number < 4:
@@ -67,7 +70,7 @@ def selectnumber():
     else:
         number = 1
 
-    with open('/Users/Alex/Documents/Python/number.txt', 'w') as numberwrite:
+    with open('/Users/Alex/Documents/Python3/compt/number.txt', 'w') as numberwrite:
         numberwrite.write('{}'.format(number))
 
     return to_return
@@ -96,22 +99,100 @@ def cleanup_latex(folder_path):
                         shutil.move(os.path.join(folder_path, filename), temppath)
                         i += 1
         if i > 0:
-            print '{} LaTeX files cleaned up.\n'.format(i)
+            print('{} LaTeX files cleaned up.\n'.format(i))
         if i == 0:
-            print 'No LaTeX files to clean up!\n'
+            print('No LaTeX files to clean up!\n')
 
     else:
-        print 'Path "{}" does not exist!\n'.format(folder_path)
+        print('Path "{}" does not exist!\n'.format(folder_path))
+
+
+def remove(path):
+    """
+    Removes all files in path
+    :param path: Absolute path to directory
+    :return: None
+    """
+    os.chdir(path)
+    for fol in os.listdir(os.getcwd()):
+        if not fol.startswith('.'):
+            try:
+                shutil.rmtree(fol)
+            except OSError:
+                os.remove(fol)
+
+
+def run_shell(path):
+    """
+    Run a bash script as shell (DANGEROUS)
+    :param path: Path to Unix executable
+    :return: None
+    """
+    if os.path.exists(path):
+        subprocess.call(path)
+
+
+def git_commits(list_of_paths):
+    """
+    cd to several directories and git commit everything in them
+    :param list_of_paths: List of paths to cd to and git commit
+    :return: None
+    """
+    message = '5 day commit {0:%d-%b-%y}'.format(datetime.now())
+    for path in list_of_paths:
+        if os.path.exists(path):
+            try:
+                subprocess.run(['cd', path])
+                sleep(1)
+                subprocess.run(['git', 'add', '.'])
+                sleep(1)
+                subprocess.run(['git', 'commit', '-m', message])
+                sleep(1)
+                subprocess.run(['git', 'push'])
+                sleep(1)
+                logfile = subprocess.check_output('git log -1 --pretty=format:"%ci"'.split()).decode()
+                newdate = logfile[:logfile.index(' ')].replace('"', '')
+                date = datetime.strptime(newdate, '%Y-%m-%d').date()
+                assert(date == datetime.now().date())
+                print('Committed {}'.format(path))
+            except AssertionError:
+                print('Unable to confirm if git commit worked in {}'.format(path))
+        else:
+            print("Ignored this path because it doesn't exist: {}".format(path))
+
+
+def clear_temp_folders():
+    """
+    Clears Spark mail client temporary folders
+    :return: None
+    """
+    pathe = os.getcwd()
+    path1 = '/Users/Alex/Library/Group Containers/3L68KQB4HG.group.com.readdle.smartemail/cache/messagesData'
+
+    remove(path1)
+
+    os.chdir(pathe)
 
 
 def mainhd():
-    with open('/.paths.txt') as files:
-        one, two, three, four, five, six, seven = files.read().split('\n')
-
-    backup_to_zip(folder=one, path=two, number=selectnumber())
-    backup_to_zip(three, four)
-    cleanup_latex(five)
-    backup_to_zip(six, seven)
+    """
+    Run main
+    :return: None
+    """
+    paths = ['/Users/Alex/Desktop/College/', '/Users/Alex/Documents/Python/',
+             '/Users/Alex/Documents/Python3/', '/Users/Alex/Documents/LaTeX/',
+             '/Users/Alex/Documents/PythonGUI/']
+    backup_to_zip(folder='/Users/Alex/Desktop/College/', path='/Users/Alex/Box Sync/',
+                  number=selectnumber())
+    backup_to_zip('/Users/Alex/Desktop/Clutter/', '/Users/Alex/Dropbox/Backups/')
+    cleanup_latex('/Users/Alex/Documents/LaTeX/Files')
+    backup_to_zip('/Users/Alex/Documents/', '/Users/Alex/Box Sync/')
+    clear_temp_folders()
+    try:
+        git_commits(paths)
+    except:
+        print("Couldn't git commit")
+        pass
 
 
 if __name__ == '__main__':
