@@ -1,4 +1,4 @@
-# compt.py
+# backup.py
 Backup files and move to Dropbox and Box Sync folders.
 
 ### Description
