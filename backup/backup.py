@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #####################################
-#    LAST UPDATED     20 DEC 2017   #
+#    LAST UPDATED     16 FEB 2018   #
 #####################################
 """
 Automates computer management without a GUI
@@ -32,7 +32,8 @@ def backup_to_zip(folder: str, path: str, number: int=None) -> None:
             zipfilename = '{}.zip'.format(os.path.basename(folder))
 
         # create the ZIP file
-        print('Creating {}...'.format(zipfilename))
+        if debug:
+            print('Creating {}...'.format(zipfilename))
 
         backupzip = ZipFile(zipfilename, 'w', allowZip64=True)
         amount = 0
@@ -50,7 +51,9 @@ def backup_to_zip(folder: str, path: str, number: int=None) -> None:
                 amount += 1
 
         backupzip.close()
-        print('Backed up {} files!'.format(amount))
+
+        if debug:
+            print('Backed up {} files!'.format(amount))
 
     else:
         if not os.path.exists(path) and not os.path.exists(folder):
@@ -103,10 +106,11 @@ def cleanup_latex(folder_path: str) -> None:
                         os.makedirs(temppath)
                         shutil.move(os.path.join(folder_path, filename), temppath)
                         i += 1
-        if i > 0:
-            print('{} LaTeX files cleaned up.\n'.format(i))
-        if i == 0:
-            print('No LaTeX files to clean up!\n')
+        if debug:
+            if i > 0:
+                print('{} LaTeX files cleaned up.\n'.format(i))
+            if i == 0:
+                print('No LaTeX files to clean up!\n')
 
     else:
         print('Path "{}" does not exist!\n'.format(folder_path))
@@ -155,6 +159,7 @@ def mainhd() -> None:
     Run main program. Backup folders to zip, clean up any LaTeX files, clear temp folders
     :return: None
     """
+    debug = False
     backup_to_zip(folder='/Users/Alex/Desktop/College/', path='/Users/Alex/Box Sync/',
                   number=selectnumber())
     backup_to_zip('/Users/Alex/Desktop/Clutter/', '/Users/Alex/Dropbox/Backups/')
