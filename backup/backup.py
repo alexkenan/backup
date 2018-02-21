@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #####################################
-#    LAST UPDATED     16 FEB 2018   #
+#    LAST UPDATED     20 FEB 2018   #
 #####################################
 """
 Automates computer management without a GUI
@@ -8,10 +8,8 @@ Automates computer management without a GUI
 from zipfile import ZipFile
 import os
 import shutil
-import re
 import subprocess
-from datetime import datetime
-from time import sleep
+import argparse
 
 
 def backup_to_zip(folder: str, path: str, number: int=None) -> None:
@@ -159,7 +157,6 @@ def mainhd() -> None:
     Run main program. Backup folders to zip, clean up any LaTeX files, clear temp folders
     :return: None
     """
-    debug = False
     backup_to_zip(folder='/Users/Alex/Desktop/College/', path='/Users/Alex/Box Sync/',
                   number=selectnumber())
     backup_to_zip('/Users/Alex/Desktop/Clutter/', '/Users/Alex/Dropbox/Backups/')
@@ -169,4 +166,12 @@ def mainhd() -> None:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Verbosely perform backup functions")
+    args = parser.parse_args()
+    if args.verbose:
+        debug = True
+    else:
+        debug = False
     mainhd()
